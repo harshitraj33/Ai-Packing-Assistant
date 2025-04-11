@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packing Assistant</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #74ebd5, #acb6e5);
+            color: #444;
+        }
+
+        /* Container Styling */
+        .container {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        /* Heading Styling */
+        h1 {
+            font-size: 2.5rem;
+            color: #007bff;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Input Styling */
+        input {
+            padding: 12px;
+            width: 90%;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        /* Button Styling */
+        button {
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Result Section Styling */
+        .result {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .result h3 {
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            background: #f4f4f9;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Error Message Styling */
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Packing Assistant</h1>
+        <input type="text" id="location" placeholder="Enter location">
+        <button onclick="getPackingList()">Get Packing List</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_KEY = "deb4bdf09cbf1fa2295d226d66520985"; // Replace with your Weatherstack API key
+
+        async function getPackingList() {
+            const location = document.getElementById("location").value;
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = ""; // Clear previous results
+
+            if (!location) {
+                resultDiv.innerHTML = '<p class="error">Please enter a location.</p>';
+                return;
+            }
+
+            try {
+                // Fetch weather data from Weatherstack API
+                const response = await fetch(`http://api.weatherstack.com/current?access_key=${API_KEY}&query=${location}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.info);
+                }
+
+                const temp = data.current.temperature;
+                const weatherCondition = data.current.weather_descriptions[0];
+
+                // Generate packing list
+                let packingList = [];
+                if (temp < 10) {
+                    packingList.push("Warm jacket", "Gloves", "Scarf", "Thermal wear");
+                } else if (temp >= 10 && temp <= 20) {
+                    packingList.push("Light jacket", "Sweater", "Jeans");
+                } else {
+                    packingList.push("T-shirts", "Shorts", "Sunglasses", "Hat");
+                }
+
+                if (weatherCondition.toLowerCase().includes("rain")) {
+                    packingList.push("Umbrella");
+                } else if (weatherCondition.toLowerCase().includes("snow")) {
+                    packingList.push("Snow boots");
+                }
+
+                // Display packing list
+                resultDiv.innerHTML = `
+                    <h3>Weather in ${location}</h3>
+                    <p>Temperature: ${temp}°C</p>
+                    <p>Condition: ${weatherCondition}</p>
+                    <h4>Packing List:</h4>
+                    <ul>${packingList.map(item => `<li>${item}</li>`).join("")}</ul>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
