@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Packing Assistant</title>
+    <title>Packing Assistant Chatbot</title>
     <style>
-        /* General Reset */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* Body Styling */
         body {
             font-family: 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #74ebd5, #acb6e5);
+            background: url('travel.png') no-repeat center center fixed;
+            background-size: cover;
             color: #444;
         }
 
-        /* Container Styling */
         .container {
             text-align: center;
             padding: 30px;
@@ -34,7 +32,6 @@
             max-width: 500px;
         }
 
-        /* Heading Styling */
         h1 {
             font-size: 2.5rem;
             color: #007bff;
@@ -42,7 +39,29 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        /* Input Styling */
+        .chat {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .chat p {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .bot {
+            background: #f4f4f9;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .user {
+            background: #007bff;
+            color: white;
+            text-align: right;
+        }
+
         input {
             padding: 12px;
             width: 90%;
@@ -52,7 +71,6 @@
             font-size: 1rem;
         }
 
-        /* Button Styling */
         button {
             padding: 12px 25px;
             background-color: #007bff;
@@ -69,98 +87,145 @@
             transform: scale(1.05);
         }
 
-        /* Result Section Styling */
-        .result {
-            margin-top: 20px;
-            text-align: left;
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
-        .result h3 {
-            color: #007bff;
-            margin-bottom: 10px;
+        .restart-button {
+            width: 40px; /* Set width */
+            height: 40px; /* Set height equal to width */
+            border-radius: 50%; /* Make it a perfect circle */
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Center the content inside the button */
         }
 
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        ul li {
-            background: #f4f4f9;
-            padding: 8px 12px;
-            margin: 5px 0;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Error Message Styling */
-        .error {
-            color: red;
-            font-weight: bold;
+        .restart-button:hover {
+            background-color: #cc0000;
+            transform: scale(1.1);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Packing Assistant</h1>
-        <input type="text" id="location" placeholder="Enter location">
-        <button onclick="getPackingList()">Get Packing List</button>
-        <div id="result" class="result"></div>
+        <h1>Packing Assistant Chatbot</h1>
+        <div id="chat" class="chat"></div>
+        <input type="text" id="userInput" placeholder="Type your message here">
+        <div class="button-container">
+            <button onclick="handleChat()">Send</button>
+            <button class="restart-button" onclick="restartChat()">⟳</button>
+        </div>
     </div>
 
     <script>
-        const API_KEY = "deb4bdf09cbf1fa2295d226d66520985"; // Replace with your Weatherstack API key
+        const API_KEY = "deb4bdf09cbf1fa2295d226d66520985";
+        let step = 0;
 
-        async function getPackingList() {
-            const location = document.getElementById("location").value;
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = ""; // Clear previous results
+        function addMessage(message, sender) {
+            const chatDiv = document.getElementById("chat");
+            const messageElement = document.createElement("p");
+            messageElement.className = sender;
+            messageElement.textContent = message;
+            chatDiv.appendChild(messageElement);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
 
-            if (!location) {
-                resultDiv.innerHTML = '<p class="error">Please enter a location.</p>';
-                return;
-            }
+        // Add this function to greet the user when the page loads
+        window.onload = function () {
+            addMessage("Hi there! I'm your Packing Assistant Chatbot. How can I help you today?", "bot");
+        };
 
-            try {
-                // Fetch weather data from Weatherstack API
-                const response = await fetch(`http://api.weatherstack.com/current?access_key=${API_KEY}&query=${location}`);
-                const data = await response.json();
+        async function handleChat() {
+            const userInput = document.getElementById("userInput");
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
 
-                if (data.error) {
-                    throw new Error(data.error.info);
-                }
+            addMessage(userMessage, "user");
+            userInput.value = "";
 
-                const temp = data.current.temperature;
-                const weatherCondition = data.current.weather_descriptions[0];
-
-                // Generate packing list
-                let packingList = [];
-                if (temp < 10) {
-                    packingList.push("Warm jacket", "Gloves", "Scarf", "Thermal wear");
-                } else if (temp >= 10 && temp <= 20) {
-                    packingList.push("Light jacket", "Sweater", "Jeans");
+            if (step === 0) {
+                addMessage("Hello! Are you going somewhere?", "bot");
+                step++;
+            } else if (step === 1) {
+                if (userMessage.toLowerCase() === "yes") {
+                    addMessage("Great! Where are you traveling to?", "bot");
+                    step++;
+                } else if (userMessage.toLowerCase() === "no") {
+                    addMessage("Sorry, I can't help you with anything else as I am trained to help you pack your travel bag.", "bot");
+                    step = 0; // Reset the conversation
                 } else {
-                    packingList.push("T-shirts", "Shorts", "Sunglasses", "Hat");
+                    addMessage("Please answer with 'yes' or 'no'.", "bot");
                 }
+            } else if (step === 2) {
+                const location = userMessage;
+                addMessage(`Fetching packing list for ${location}...`, "bot");
 
-                if (weatherCondition.toLowerCase().includes("rain")) {
-                    packingList.push("Umbrella");
-                } else if (weatherCondition.toLowerCase().includes("snow")) {
-                    packingList.push("Snow boots");
+                try {
+                    const response = await fetch(`http://api.weatherstack.com/current?access_key=${API_KEY}&query=${location}`);
+                    const data = await response.json();
+
+                    if (data.error) {
+                        throw new Error(data.error.info);
+                    }
+
+                    const temp = data.current.temperature;
+                    const weatherCondition = data.current.weather_descriptions[0];
+
+                    let packingList = [];
+                    if (temp < 10) {
+                        packingList.push("Warm jacket", "Gloves", "Scarf", "Thermal wear");
+                    } else if (temp >= 10 && temp <= 20) {
+                        packingList.push("Light jacket", "Sweater", "Jeans");
+                    } else {
+                        packingList.push("T-shirts", "Shorts", "Sunglasses", "Hat");
+                    }
+
+                    if (weatherCondition.toLowerCase().includes("rain")) {
+                        packingList.push("Umbrella");
+                    } else if (weatherCondition.toLowerCase().includes("snow")) {
+                        packingList.push("Snow boots");
+                    }
+
+                    addMessage(`Weather in ${location}: ${temp}°C, ${weatherCondition}`, "bot");
+                    addMessage(`Packing List: ${packingList.join(", ")}`, "bot");
+                    step++;
+                } catch (error) {
+                    addMessage(`Error: ${error.message}`, "bot");
+                    step = 0; // Reset the conversation
                 }
-
-                // Display packing list
-                resultDiv.innerHTML = `
-                    <h3>Weather in ${location}</h3>
-                    <p>Temperature: ${temp}°C</p>
-                    <p>Condition: ${weatherCondition}</p>
-                    <h4>Packing List:</h4>
-                    <ul>${packingList.map(item => `<li>${item}</li>`).join("")}</ul>
-                `;
-            } catch (error) {
-                resultDiv.innerHTML = `<p class="error">${error.message}</p>`;
+            } else if (step === 3) {
+                if (userMessage.toLowerCase() === "thank you" || userMessage.toLowerCase() === "thanks") {
+                    addMessage("You're most welcome!", "bot");
+                    step = 0; // End the conversation
+                } else {
+                    addMessage("If you need more help, feel free to ask!", "bot");
+                }
             }
         }
+
+        function restartChat() {
+            const chatDiv = document.getElementById("chat");
+            chatDiv.innerHTML = ""; // Clear the chat messages
+            step = 0; // Reset the conversation step
+            addMessage("Hi there! I'm your Packing Assistant Chatbot. How can I help you today?", "bot");
+        }
+
+        // Add event listener for Enter key
+        document.getElementById("userInput").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent default form submission
+                handleChat(); // Trigger the chat handler
+            }
+        });
     </script>
 </body>
 </html>
